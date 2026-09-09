@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Glowstone Industries — Sample Piece Order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green-dark: #0a5c45; --green-mid: #0f7a5a; --green-light: #e6f4ef;
+    --green-border: #b2d9cc; --text-primary: #111827; --text-secondary: #4b5563;
+    --text-muted: #9ca3af; --border: #e5e7eb; --border-strong: #d1d5db;
+    --surface: #ffffff; --bg: #f8faf9; --danger: #dc2626;
+    --danger-bg: #fef2f2; --danger-border: #fecaca;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12),0 4px 8px rgba(0,0,0,0.06);
+    --radius: 10px; --radius-sm: 6px; --radius-lg: 14px;
+  }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text-primary); min-height:100vh; font-size:14px; line-height:1.5; }
+  .topbar { background:var(--green-dark); padding:14px 20px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:100; }
+  .topbar-icon { width:36px; height:36px; background:rgba(255,255,255,0.15); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar-icon svg { width:20px; height:20px; fill:#fff; }
+  .topbar-text h1 { font-size:15px; font-weight:600; color:#fff; line-height:1.3; }
+  .topbar-text p { font-size:11px; color:rgba(255,255,255,0.65); margin-top:1px; }
+  .page { max-width:740px; margin:0 auto; padding:20px 16px 60px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); margin-bottom:14px; overflow:visible; }
+  .card-head { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); background:#fafafa; border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+  .card-head-icon { width:28px; height:28px; background:var(--green-light); border-radius:7px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .card-head-icon svg { width:15px; height:15px; stroke:var(--green-dark); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .card-head-title { font-size:13px; font-weight:600; color:var(--text-primary); }
+  .card-body { padding:16px; }
+  .field { margin-bottom:14px; }
+  .field:last-child { margin-bottom:0; }
+  .field label { display:block; font-size:12px; font-weight:500; color:var(--text-secondary); margin-bottom:5px; }
+  .req { color:var(--danger); margin-left:2px; }
+  .field input[type="date"], .field textarea, .plain-input {
+    width:100%; padding:10px 13px; border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text-primary); background:var(--surface);
+    transition:border-color 0.15s,box-shadow 0.15s; outline:none; appearance:none; -webkit-appearance:none;
+  }
+  .field input[type="date"]:focus, .field textarea:focus, .plain-input:focus { border-color:var(--green-mid); box-shadow:0 0 0 3px rgba(15,122,90,0.1); }
+  .field textarea { resize:vertical; min-height:70px; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  /* ── COMBOBOX ── */
+  .cb-wrap { position:relative; }
+  .cb-input {
+    width:100%; padding:10px 34px 10px 13px; border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text-primary); background:var(--surface);
+    outline:none; transition:border-color 0.15s,box-shadow 0.15s; cursor:text;
+  }
+  .cb-input:focus { border-color:var(--green-mid); box-shadow:0 0 0 3px rgba(15,122,90,0.1); }
+  .cb-input::placeholder { color:var(--text-muted); }
+  .cb-chevron { position:absolute; right:10px; top:50%; transform:translateY(-50%) rotate(0deg); pointer-events:none; transition:transform 0.18s; }
+  .cb-chevron svg { width:14px; height:14px; stroke:var(--text-muted); fill:none; stroke-width:2; stroke-linecap:round; display:block; }
+  .cb-wrap.open .cb-chevron { transform:translateY(-50%) rotate(180deg); }
+  .cb-dropdown {
+    display:none; position:fixed; z-index:99999;
+    background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--radius);
+    box-shadow:var(--shadow-lg); max-height:320px; overflow-y:auto;
+    scrollbar-width:thin; scrollbar-color:var(--border-strong) transparent;
+  }
+  .cb-wrap.open .cb-dropdown { display:block; }
+  .cb-dropdown.cb-open { display:block; }
+  .cb-dropdown::-webkit-scrollbar { width:6px; }
+  .cb-dropdown::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:3px; }
+  .cb-option {
+    padding:13px 16px; font-size:15px; color:var(--text-primary); cursor:pointer;
+    border-bottom:1px solid var(--border); transition:background 0.08s; user-select:none;
+    line-height:1.4;
+  }
+  .cb-option:last-child { border-bottom:none; }
+  .cb-option:hover, .cb-option.hi { background:var(--green-light); color:var(--green-dark); }
+  .cb-option.selected { font-weight:600; }
+  .cb-option .hl { background:rgba(15,122,90,0.18); border-radius:2px; padding:0 1px; }
+  .cb-option.add-custom { color:var(--green-dark); font-style:italic; border-top:1px solid var(--border); background:var(--bg); }
+  .cb-option.add-custom:hover, .cb-option.add-custom.hi { background:var(--green-light); }
+  .cb-empty { padding:13px 16px; font-size:15px; color:var(--text-muted); }
+
+  /* inline compact variant — used inside table cells */
+  .cb-inline .cb-input { padding:8px 26px 8px 7px; font-size:13px; }
+  .cb-inline .cb-chevron { right:6px; }
+  .cb-inline .cb-chevron svg { width:11px; height:11px; }
+  /* inline dropdown uses same large sizing as main dropdown */
+  .cb-inline .cb-option { padding:12px 14px; font-size:14px; }
+  .cb-inline .cb-input::placeholder { font-size:12px; }
+  .cb-inline .cb-dropdown { max-height:300px; }
+
+  /* items table */
+  .items-table { width:100%; border-collapse:collapse; }
+  .items-table thead th { font-size:11px; font-weight:600; color:var(--text-muted); letter-spacing:0.05em; text-transform:uppercase; padding:0 6px 10px; text-align:left; border-bottom:1px solid var(--border); }
+  .items-table tbody tr td { padding:5px 4px; vertical-align:top; }
+  .items-table tbody tr td:first-child { padding-left:0; }
+  .items-table tbody tr td:last-child { padding-right:0; width:38px; }
+  .items-table input[type="number"] { width:100%; padding:8px 7px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text-primary); background:var(--surface); outline:none; transition:border-color 0.15s; -moz-appearance:textfield; }
+  .items-table input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; }
+  .items-table input[type="number"]:focus { border-color:var(--green-mid); box-shadow:0 0 0 2px rgba(15,122,90,0.1); }
+  .col-name{width:28%;} .col-size{width:19%;} .col-thick{width:19%;} .col-sets{width:11%;} .col-pcs{width:11%;} .col-del{width:8%;text-align:center;}
+  .del-btn { width:32px; height:32px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); background:var(--surface); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; margin:0 auto; }
+  .del-btn:hover { border-color:var(--danger); background:var(--danger-bg); }
+  .del-btn svg { width:14px; height:14px; stroke:var(--text-muted); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:stroke 0.15s; }
+  .del-btn:hover svg { stroke:var(--danger); }
+
+  /* mobile */
+  .mobile-item-card { display:none; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px; margin-bottom:10px; position:relative; }
+  .item-number-badge { display:inline-block; background:var(--green-dark); color:#fff; font-size:11px; font-weight:600; border-radius:4px; padding:2px 8px; margin-bottom:10px; }
+  .mobile-del { position:absolute; top:10px; right:10px; width:28px; height:28px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); background:var(--surface); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+  .mobile-del:hover { border-color:var(--danger); background:var(--danger-bg); }
+  .mobile-del svg { width:13px; height:13px; stroke:var(--text-muted); fill:none; stroke-width:2; stroke-linecap:round; }
+  .mobile-del:hover svg { stroke:var(--danger); }
+  .mic-label { font-size:11px; font-weight:500; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+  .mic-field { margin-bottom:10px; }
+  .mic-field:last-child { margin-bottom:0; }
+  .mic-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .mic-input { width:100%; padding:9px 10px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text-primary); background:var(--surface); outline:none; transition:border-color 0.15s; -moz-appearance:textfield; }
+  .mic-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+  .mic-input:focus { border-color:var(--green-mid); box-shadow:0 0 0 2px rgba(15,122,90,0.1); }
+
+  .add-item-btn { display:flex; align-items:center; justify-content:center; gap:7px; padding:11px 16px; width:100%; border:1.5px dashed var(--green-border); border-radius:var(--radius-sm); background:var(--green-light); color:var(--green-dark); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s; margin-top:4px; }
+  .add-item-btn:hover { background:#d2ece4; border-color:var(--green-mid); }
+  .add-item-btn svg { width:16px; height:16px; stroke:var(--green-dark); fill:none; stroke-width:2.5; stroke-linecap:round; }
+
+  .totals-strip { display:flex; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--border); }
+  .total-box { flex:1; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px; text-align:center; }
+  .total-box .tb-label { font-size:10px; color:var(--text-muted); font-weight:500; text-transform:uppercase; letter-spacing:0.05em; }
+  .total-box .tb-value { font-size:20px; font-weight:600; color:var(--green-dark); margin-top:2px; font-family:'DM Mono',monospace; }
+
+  .err-bar { display:none; align-items:center; gap:10px; padding:12px 16px; background:var(--danger-bg); border:1px solid var(--danger-border); border-radius:var(--radius-sm); font-size:13px; color:var(--danger); margin-bottom:14px; }
+  .err-bar.show { display:flex; }
+  .err-bar svg { width:16px; height:16px; stroke:var(--danger); fill:none; stroke-width:2; stroke-linecap:round; flex-shrink:0; }
+
+  .submit-btn { width:100%; padding:14px; background:var(--green-dark); color:#fff; border:none; border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:9px; transition:background 0.15s,transform 0.1s; box-shadow:var(--shadow-md); margin-top:6px; -webkit-tap-highlight-color:transparent; }
+  .submit-btn:hover { background:var(--green-mid); }
+  .submit-btn:active { transform:scale(0.99); }
+  .submit-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .submit-btn svg { width:18px; height:18px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
+
+  #receiptView { display:none; }
+  .success-banner { display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--green-light); border:1px solid var(--green-border); border-radius:var(--radius); margin-bottom:16px; }
+  .success-banner svg { width:22px; height:22px; stroke:var(--green-dark); fill:none; stroke-width:2; stroke-linecap:round; flex-shrink:0; }
+  .success-banner-text h3 { font-size:14px; font-weight:600; color:var(--green-dark); }
+  .success-banner-text p { font-size:12px; color:var(--green-mid); margin-top:2px; }
+  .receipt { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); overflow:hidden; margin-bottom:14px; }
+  .receipt-header { background:var(--green-dark); padding:16px 20px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .receipt-header-left h2 { font-size:15px; font-weight:600; color:#fff; }
+  .receipt-header-left p { font-size:11px; color:rgba(255,255,255,0.6); margin-top:3px; }
+  .order-no-badge { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); border-radius:6px; padding:5px 12px; font-family:'DM Mono',monospace; font-size:13px; font-weight:500; color:#fff; white-space:nowrap; align-self:flex-start; }
+  .receipt-meta-grid { display:grid; grid-template-columns:1fr 1fr; }
+  .meta-cell { padding:10px 20px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
+  .meta-cell:nth-child(even) { border-right:none; }
+  .meta-cell.full { grid-column:1/-1; border-right:none; }
+  .meta-cell .mc-label { font-size:10px; color:var(--text-muted); font-weight:500; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px; }
+  .meta-cell .mc-value { font-size:13px; color:var(--text-primary); font-weight:500; word-break:break-word; }
+  .receipt-items-section { padding:14px 20px; overflow-x:auto; }
+  .receipt-table { width:100%; border-collapse:collapse; min-width:380px; }
+  .receipt-table thead th { font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; padding:0 8px 8px; text-align:left; border-bottom:1px solid var(--border); }
+  .receipt-table tbody td { font-size:13px; color:var(--text-primary); padding:8px; border-bottom:1px solid var(--border); }
+  .receipt-table tbody tr:last-child td { border-bottom:none; }
+  .receipt-table .sr-col { color:var(--text-muted); font-family:'DM Mono',monospace; font-size:12px; }
+  .receipt-footer { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; background:#fafafa; border-top:1px solid var(--border); gap:10px; flex-wrap:wrap; }
+  .receipt-totals { display:flex; gap:16px; flex-wrap:wrap; }
+  .receipt-total-item { font-size:13px; color:var(--text-secondary); }
+  .receipt-total-item strong { color:var(--text-primary); font-weight:600; }
+  .disclaimer { font-size:11px; color:var(--text-muted); font-style:italic; }
+  .receipt-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+  .action-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 18px; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s; border:1px solid var(--border-strong); background:var(--surface); color:var(--text-secondary); flex:1; -webkit-tap-highlight-color:transparent; }
+  .action-btn:hover { background:var(--bg); color:var(--text-primary); border-color:var(--green-mid); }
+  .action-btn.primary { background:var(--green-dark); color:#fff; border-color:var(--green-dark); }
+  .action-btn.primary:hover { background:var(--green-mid); border-color:var(--green-mid); }
+  .action-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+
+  @media(max-width:600px){
+    .two-col{grid-template-columns:1fr;gap:10px;} .topbar{padding:10px 14px;} .topbar-text h1{font-size:13px;}
+    .page{padding:14px 12px 50px;} .card-body{padding:14px 12px;} .card-head{padding:10px 12px;}
+    .items-table{display:none!important;} .mobile-item-card{display:block;}
+    .receipt-meta-grid{grid-template-columns:1fr;} .meta-cell{border-right:none;}
+    .receipt-header{flex-direction:column;gap:8px;} .receipt-actions{flex-direction:column;} .action-btn{width:100%;}
+    .cb-option { padding:15px 16px; font-size:16px; }
+    .cb-empty { padding:15px 16px; font-size:16px; }
+  }
+  @media(min-width:601px){ .mobile-item-card{display:none!important;} .items-table{display:table!important;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+  <div class="topbar-text">
+    <h1>Glowstone Industries Pvt Ltd</h1>
+    <p>Sample Piece Order Entry · Village Baran, Bhilwara – 311401</p>
+  </div>
+</div>
+
+<div class="page" id="formView">
+  <div id="errBar" class="err-bar">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span id="errMsg"></span>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <span class="card-head-title">Order info</span>
+    </div>
+    <div class="card-body">
+      <div class="two-col">
+        <div class="field">
+          <label>Reference <span class="req">*</span></label>
+          <div id="cb-requestedBy"></div>
+        </div>
+        <div class="field">
+          <label>Dispatch priority date <span class="req">*</span></label>
+          <input type="date" id="dispatchDate" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+      <span class="card-head-title">Party details</span>
+    </div>
+    <div class="card-body">
+      <div class="two-col">
+        <div class="field">
+          <label>Party name <span class="req">*</span></label>
+          <input class="plain-input" type="text" id="partyName" placeholder="e.g. ABC Quartz" />
+        </div>
+        <div class="field">
+          <label>Attention Person &amp; Contact <span class="req">*</span></label>
+          <input class="plain-input" type="text" id="salesperson" placeholder="e.g. From the side of Party" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Ship to address <span class="req">*</span></label>
+        <textarea id="shipTo" placeholder="Full delivery address with PIN code"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+      <span class="card-head-title">Item details</span>
+    </div>
+    <div class="card-body">
+      <table class="items-table">
+        <thead><tr>
+          <th class="col-name">Item name</th><th class="col-size">Size</th>
+          <th class="col-thick">Thickness</th><th class="col-sets">Sets</th>
+          <th class="col-pcs">Pcs</th><th class="col-del"></th>
+        </tr></thead>
+        <tbody id="itemsBody"></tbody>
+      </table>
+      <div id="mobileItemsContainer"></div>
+      <button type="button" class="add-item-btn" id="addItemBtn">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add another item
+      </button>
+      <div class="totals-strip">
+        <div class="total-box"><div class="tb-label">Items</div><div class="tb-value" id="totalItems">0</div></div>
+        <div class="total-box"><div class="tb-label">Total sets</div><div class="tb-value" id="totalSets">0</div></div>
+        <div class="total-box"><div class="tb-label">Total pcs</div><div class="tb-value" id="totalPcs">0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      <span class="card-head-title">Note <span style="font-weight:400;color:var(--text-muted)">(optional)</span></span>
+    </div>
+    <div class="card-body">
+      <div class="field"><textarea id="note" placeholder="Any special instructions or remarks..."></textarea></div>
+    </div>
+  </div>
+
+  <button type="button" class="submit-btn" id="submitBtn">
+    <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    Submit order
+  </button>
+</div>
+
+<div class="page" id="receiptView">
+  <div class="success-banner">
+    <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <div class="success-banner-text">
+      <h3 id="successHeading">Order submitted successfully</h3>
+      <p id="successSub">Data logged to sheet. Receipt below.</p>
+    </div>
+  </div>
+  <div class="receipt" id="receiptCard">
+    <div class="receipt-header">
+      <div class="receipt-header-left"><h2>Glowstone Industries Pvt Ltd</h2><p>GSTIN: 08AAFCG6300F1ZY &nbsp;·&nbsp; Sample Piece Order Confirmation</p></div>
+      <div class="order-no-badge" id="r-orderNo">SP-26-27/0001</div>
+    </div>
+    <div class="receipt-meta-grid">
+      <div class="meta-cell"><div class="mc-label">Date &amp; time</div><div class="mc-value" id="r-datetime">—</div></div>
+      <div class="meta-cell"><div class="mc-label">Reference</div><div class="mc-value" id="r-filledby">—</div></div>
+      <div class="meta-cell"><div class="mc-label">Party name</div><div class="mc-value" id="r-party">—</div></div>
+      <div class="meta-cell"><div class="mc-label">Attention Person &amp; Contact</div><div class="mc-value" id="r-salesperson">—</div></div>
+      <div class="meta-cell full"><div class="mc-label">Ship to</div><div class="mc-value" id="r-shipto">—</div></div>
+      <div class="meta-cell full" style="border-bottom:none"><div class="mc-label">Dispatch priority date</div><div class="mc-value" id="r-dispatch">—</div></div>
+    </div>
+    <div class="receipt-items-section">
+      <table class="receipt-table">
+        <thead><tr><th style="width:32px">Sr</th><th>Item name</th><th>Size</th><th>Thickness</th><th style="width:52px">Sets</th><th style="width:52px">Pcs</th></tr></thead>
+        <tbody id="r-items"></tbody>
+      </table>
+    </div>
+    <div class="receipt-footer">
+      <div class="receipt-totals">
+        <div class="receipt-total-item">Total sets: <strong id="r-sets">—</strong></div>
+        <div class="receipt-total-item">Total pcs: <strong id="r-pcs">—</strong></div>
+      </div>
+      <div class="disclaimer">Sample piece order · No commercial value</div>
+    </div>
+  </div>
+  <div class="receipt-actions">
+    <button type="button" class="action-btn primary" id="downloadImgBtn">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download receipt (image)
+    </button>
+    <button type="button" class="action-btn" id="newOrderBtn">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Place new order
+    </button>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby14VD1QhilZil9sqUs-iFWWDJawqRHmhIPyQVgnYLvZPkMaQwYn30DNjWJILqaj6kB/exec';
+
+const FORM_FILLERS = ['Mr. Ravi Khurana','Mr. Jitendra','Mr. Gaurav Rahal','Mr. Tarun','Mr. Dhaval Doshi','Mr. Sanchit','Mr. Kaushal','Mr. Manish','Mr. Ishwar','Mr. Diliip','Mr. Ashish Ghiya','Mr. Mayank','Mr.Komal','Mr.Abhinav','Mr.Arpit'];
+const SALESPERSONS = ['Mr. Ravi Khurana','Mr. Jitendra','Mr. Gaurav Rahal','Mr. Tarun','Mr. Dhaval Doshi','Mr. Sanchit','Mr. Kaushal','Mr. Manish','Mr. Ishwar','Mr. Diliip','Mr. Ashish Ghiya','Mr. Mayank'];
+const ITEM_NAMES = ['Eternal Architect Set','Glowstone Architect Set','Glowstone Display Stand Set','Eternal India Display Stand Set','Eternal Dubai Display Stand Set','Eternal dealer set','Glowstone Dealer set','Duolina','White Galaxy','Alabama','Alba Gold','Almond','Amarillo','Andes Gold','Aspen Gold','Astral','Aurika','Aurum','Avalanche','Bellagio','Bianco Nova','Bianco Oro','Bianco Stratus','Black Starlight','Blaze','Botticino','Bravia','Brown Starlight','Cascade Gold','Cashmere','Celestial','Celestial Path','Champagne','Chicago','Cream Mirror','Creek White','Crema','Crystal Ash','Crystal Jade','Dawn','Desert Pearl','Enchanted Flame','Everest Gold','Everest Grey','Fossil','Frost White','Glacier White','Gold Mine','Gold Wave','Golden Divinity','Golden Gleam','Gracio','Grey Starlight','Grey Terrazzo','Halo','Harmony Gold','Himalaya','Ice White','Indigo','Linen','London Gold','London Grey','Luminous Gold','Marigold','Marquina Noir','Mauve','Meraki','Midnight Velvet','Mocha','Moss','Narnia Gold','Narnia Grey','Nectar','Nero Marquina','Nova','Obsidian Marble','Ocean White','Omega White','Orchid','Organic White','Orion White','Oyster Bay','Panda White','Pensa Gold','Peony','Perla Venata','Phoenix Gold','Pure White','Radiance','Rayon','Regal','Rosalia','Sage','Sahara Noir','Savanna','Seabreeze','Seafoam','Silt','Silver Roots','Snow Drift','Snowflake','Sterling','Taj Mahal','Taurus','Tigris','Trinity','Twilight','Venato','Verde','Vienna','Volcanic','Walnut','White Sparkle','White Starlight','White Terrazzo'];
+const SIZES = ['125*250','100*100','150*150','5*5','Any Size'];
+const THICKNESSES = ['5 mm','10 mm','20 mm','Any Thickness'];
+
+/* ════════════════════════════════════════════════════════════
+   COMBOBOX — searchable, typeable, add-custom
+   Uses position:fixed for dropdown so it escapes any overflow:hidden parent
+   ════════════════════════════════════════════════════════════ */
+function makeCombobox(container, items, placeholder, inline, onChange) {
+  container.classList.add('cb-wrap');
+  if (inline) container.classList.add('cb-inline');
+
+  var input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'cb-input';
+  input.placeholder = placeholder || 'Search or type…';
+  input.autocomplete = 'off';
+  input.spellcheck = false;
+
+  var chevron = document.createElement('span');
+  chevron.className = 'cb-chevron';
+  chevron.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>';
+
+  var dropdown = document.createElement('div');
+  dropdown.className = 'cb-dropdown';
+  // Append to body so it escapes all overflow:hidden parents
+  document.body.appendChild(dropdown);
+
+  container.appendChild(input);
+  container.appendChild(chevron);
+
+  var committed = '';
+  var filtered = [];
+  var hiIdx = -1;
+  var isOpen = false;
+
+  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function hlText(text, q) {
+    if (!q) return esc(text);
+    var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+    return esc(text).replace(re, '<span class="hl">$1</span>');
+  }
+
+  function filter(q) {
+    if (!q) return items.slice();
+    var lo = q.toLowerCase();
+    var a = items.filter(function(i){ return i.toLowerCase().startsWith(lo); });
+    var b = items.filter(function(i){ return !i.toLowerCase().startsWith(lo) && i.toLowerCase().includes(lo); });
+    return a.concat(b);
+  }
+
+  function positionDropdown() {
+    var rect = container.getBoundingClientRect();
+    var spaceBelow = window.innerHeight - rect.bottom;
+    var spaceAbove = rect.top;
+    var dropH = Math.min(320, window.innerHeight * 0.5);
+
+    dropdown.style.width = Math.max(rect.width, 220) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.maxHeight = dropH + 'px';
+
+    if (spaceBelow >= dropH || spaceBelow >= spaceAbove) {
+      dropdown.style.top = (rect.bottom + 4) + 'px';
+      dropdown.style.bottom = 'auto';
+    } else {
+      dropdown.style.top = 'auto';
+      dropdown.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+    }
+  }
+
+  function renderList() {
+    var q = input.value;
+    filtered = filter(q);
+    hiIdx = filtered.length ? 0 : -1;
+
+    var html = '';
+    if (!filtered.length) {
+      html = '<div class="cb-empty">No match found</div>';
+    } else {
+      filtered.forEach(function(item, i) {
+        var sel = item === committed ? ' selected' : '';
+        html += '<div class="cb-option' + sel + '" data-i="' + i + '">' + hlText(item, q) + '</div>';
+      });
+    }
+
+    var trimmed = (input.value || '').trim();
+    var exact = items.some(function(x){ return x.toLowerCase() === trimmed.toLowerCase(); });
+    if (trimmed && !exact) {
+      html += '<div class="cb-option add-custom" data-custom="1">＋ Add "' + esc(trimmed) + '"</div>';
+    }
+
+    dropdown.innerHTML = html;
+    applyHi();
+  }
+
+  function applyHi() {
+    dropdown.querySelectorAll('.cb-option:not(.add-custom)').forEach(function(el, i) {
+      el.classList.toggle('hi', i === hiIdx);
+      if (i === hiIdx) el.scrollIntoView({ block:'nearest' });
+    });
+  }
+
+  function openDrop() {
+    if (isOpen) return;
+    isOpen = true;
+    container.classList.add('open');
+    dropdown.classList.add('cb-open');
+    positionDropdown();
+    renderList();
+  }
+
+  function closeDrop() {
+    if (!isOpen) return;
+    isOpen = false;
+    container.classList.remove('open');
+    dropdown.classList.remove('cb-open');
+    if (committed) input.value = committed;
+  }
+
+  function commit(val) {
+    committed = val;
+    input.value = val;
+    isOpen = false;
+    container.classList.remove('open');
+    dropdown.classList.remove('cb-open');
+    if (onChange) onChange(val);
+  }
+
+  chevron.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    if (isOpen) { closeDrop(); input.blur(); } else { input.focus(); }
+  });
+
+  input.addEventListener('focus', function() { openDrop(); });
+
+  input.addEventListener('input', function() {
+    committed = '';
+    if (onChange) onChange('');
+    openDrop();
+    positionDropdown();
+    renderList();
+  });
+
+  input.addEventListener('keydown', function(e) {
+    if (!isOpen) { if (e.key === 'ArrowDown' || e.key === 'Enter') openDrop(); return; }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (hiIdx < filtered.length - 1) { hiIdx++; applyHi(); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (hiIdx > 0) { hiIdx--; applyHi(); }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (hiIdx >= 0 && filtered[hiIdx]) { commit(filtered[hiIdx]); }
+      else { var t = input.value.trim(); if (t) commit(t); }
+    } else if (e.key === 'Escape') {
+      closeDrop(); input.blur();
+    } else if (e.key === 'Tab') {
+      if (hiIdx >= 0 && filtered[hiIdx]) commit(filtered[hiIdx]);
+      else if (input.value.trim()) commit(input.value.trim());
+      closeDrop();
+    }
+  });
+
+  dropdown.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    var opt = e.target.closest('.cb-option');
+    if (!opt) return;
+    if (opt.dataset.custom) {
+      var t = input.value.trim(); if (t) commit(t);
+    } else {
+      var idx = parseInt(opt.dataset.i, 10);
+      if (!isNaN(idx) && filtered[idx]) commit(filtered[idx]);
+    }
+  });
+
+  dropdown.addEventListener('mousemove', function(e) {
+    var opt = e.target.closest('.cb-option:not(.add-custom)');
+    if (!opt) return;
+    var idx = parseInt(opt.dataset.i, 10);
+    if (!isNaN(idx) && idx !== hiIdx) { hiIdx = idx; applyHi(); }
+  });
+
+  document.addEventListener('mousedown', function(e) {
+    if (!container.contains(e.target) && !dropdown.contains(e.target)) closeDrop();
+  });
+
+  window.addEventListener('scroll', function() { if (isOpen) positionDropdown(); }, true);
+  window.addEventListener('resize', function() { if (isOpen) positionDropdown(); });
+
+  return {
+    getValue: function() { return committed || input.value.trim(); },
+    setValue: function(v) { committed = v; input.value = v; },
+    clear:    function() { committed = ''; input.value = ''; }
+  };
+}
+
+/* ════════════════════════════════════════════════════════════
+   Page-level comboboxes
+   ════════════════════════════════════════════════════════════ */
+var cbFilledBy = makeCombobox(document.getElementById('cb-requestedBy'), FORM_FILLERS, 'Search or type name…', false, null);
+
+/* ════════════════════════════════════════════════════════════
+   Row management
+   ════════════════════════════════════════════════════════════ */
+var rowId = 0;
+var rows = {};
+
+function addItem() {
+  rowId++;
+  var id = rowId;
+  rows[id] = {};
+
+  var tbody = document.getElementById('itemsBody');
+  var tr = document.createElement('tr');
+  tr.id = 'row-' + id;
+
+  function makeCell(cls) { var td = document.createElement('td'); td.className = cls; return td; }
+  var tdN = makeCell('col-name'), tdS = makeCell('col-size'), tdT = makeCell('col-thick');
+  var tdSets = makeCell('col-sets'), tdPcs = makeCell('col-pcs'), tdDel = makeCell('col-del');
+
+  var wN = document.createElement('div'), wS = document.createElement('div'), wTh = document.createElement('div');
+  tdN.appendChild(wN); tdS.appendChild(wS); tdT.appendChild(wTh);
+
+  rows[id].name  = makeCombobox(wN,  ITEM_NAMES,   'Item name…',  true, recalc);
+  rows[id].size  = makeCombobox(wS,  SIZES,        'Size…',       true, null);
+  rows[id].thick = makeCombobox(wTh, THICKNESSES,  'Thickness…',  true, null);
+
+  var inS = numInput('isets-' + id); var inP = numInput('ipcs-' + id);
+  tdSets.appendChild(inS); tdPcs.appendChild(inP);
+
+  var db = document.createElement('button');
+  db.type='button'; db.className='del-btn'; db.setAttribute('aria-label','Remove');
+  db.innerHTML='<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  db.addEventListener('click', function(){ removeRow(id); });
+  tdDel.appendChild(db);
+
+  [tdN,tdS,tdT,tdSets,tdPcs,tdDel].forEach(function(td){ tr.appendChild(td); });
+  tbody.appendChild(tr);
+
+  /* Mobile card */
+  var mc = document.getElementById('mobileItemsContainer');
+  var card = document.createElement('div');
+  card.className = 'mobile-item-card'; card.id = 'mrow-' + id;
+
+  var badge = document.createElement('span'); badge.className='item-number-badge'; badge.textContent='Item '+id;
+  var mdel = document.createElement('button'); mdel.type='button'; mdel.className='mobile-del'; mdel.setAttribute('aria-label','Remove');
+  mdel.innerHTML='<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  mdel.addEventListener('click', function(){ removeRow(id); });
+  card.appendChild(badge); card.appendChild(mdel);
+
+  card.appendChild(micField('Item name', function(wrap){ rows[id].mname = makeCombobox(wrap, ITEM_NAMES, 'Search item…', true, recalc); }));
+  var r1 = document.createElement('div'); r1.className='mic-row';
+  r1.appendChild(micField('Size',      function(wrap){ rows[id].msize  = makeCombobox(wrap, SIZES,       'Size…',       true, null); }));
+  r1.appendChild(micField('Thickness', function(wrap){ rows[id].mthick = makeCombobox(wrap, THICKNESSES, 'Thickness…',  true, null); }));
+  card.appendChild(r1);
+  var r2 = document.createElement('div'); r2.className='mic-row';
+  r2.appendChild(micNumField('Sets', 'misets-'+id));
+  r2.appendChild(micNumField('Pcs',  'mipcs-'+id));
+  card.appendChild(r2);
+
+  mc.appendChild(card);
+  recalc();
+}
+
+function numInput(id) {
+  var el = document.createElement('input');
+  el.type='number'; el.placeholder='0'; el.min='0'; el.id=id;
+  el.addEventListener('input', recalc);
+  return el;
+}
+function micField(labelText, initFn) {
+  var wrap = document.createElement('div'); wrap.className='mic-field';
+  var lbl  = document.createElement('div'); lbl.className='mic-label'; lbl.textContent=labelText;
+  var inner = document.createElement('div');
+  wrap.appendChild(lbl); wrap.appendChild(inner);
+  initFn(inner);
+  return wrap;
+}
+function micNumField(labelText, id) {
+  var wrap = document.createElement('div'); wrap.className='mic-field';
+  var lbl  = document.createElement('div'); lbl.className='mic-label'; lbl.textContent=labelText;
+  var inp  = document.createElement('input'); inp.type='number'; inp.className='mic-input';
+  inp.placeholder='0'; inp.min='0'; inp.id=id; inp.addEventListener('input',recalc);
+  wrap.appendChild(lbl); wrap.appendChild(inp);
+  return wrap;
+}
+
+function removeRow(id) {
+  var el=document.getElementById('row-'+id); if(el) el.remove();
+  var ml=document.getElementById('mrow-'+id); if(ml) ml.remove();
+  delete rows[id]; recalc();
+}
+
+function isMob() { return window.innerWidth <= 600; }
+function nv(id) { var e=document.getElementById(id); return e?(parseFloat(e.value)||0):0; }
+
+function recalc() {
+  var items=0,sets=0,pcs=0;
+  Object.keys(rows).forEach(function(id) {
+    var mob=isMob();
+    var name = mob ? rows[id].mname.getValue() : rows[id].name.getValue();
+    var s = nv(mob?'misets-'+id:'isets-'+id);
+    var p = nv(mob?'mipcs-'+id:'ipcs-'+id);
+    if(name){items++;sets+=s;pcs+=p;}
+  });
+  document.getElementById('totalItems').textContent=items;
+  document.getElementById('totalSets').textContent=sets;
+  document.getElementById('totalPcs').textContent=pcs;
+}
+
+function getItems() {
+  var result=[];
+  Object.keys(rows).forEach(function(id) {
+    var mob=isMob();
+    var name  = mob ? rows[id].mname.getValue()  : rows[id].name.getValue();
+    var size  = mob ? rows[id].msize.getValue()  : rows[id].size.getValue();
+    var thick = mob ? rows[id].mthick.getValue() : rows[id].thick.getValue();
+    var se = document.getElementById(mob?'misets-'+id:'isets-'+id);
+    var pe = document.getElementById(mob?'mipcs-'+id:'ipcs-'+id);
+    if(name) result.push({name:name,size:size,thick:thick,sets:se?se.value.trim():'',pcs:pe?pe.value.trim():''});
+  });
+  return result;
+}
+
+function showErr(msg){ var b=document.getElementById('errBar'); document.getElementById('errMsg').textContent=msg; b.classList.add('show'); b.scrollIntoView({behavior:'smooth',block:'center'}); }
+function hideErr(){ document.getElementById('errBar').classList.remove('show'); }
+
+function showReceipt(orderNo, payload) {
+  var now=new Date();
+  var ds=now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  var ts=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+  document.getElementById('r-orderNo').textContent=orderNo;
+  document.getElementById('r-datetime').textContent=ds+'  ·  '+ts;
+  document.getElementById('r-filledby').textContent=payload.requestedBy||'—';
+  document.getElementById('r-party').textContent=payload.partyName;
+  document.getElementById('r-salesperson').textContent=payload.salesperson;
+  document.getElementById('r-shipto').textContent=payload.shipTo;
+  document.getElementById('r-dispatch').textContent=payload.dispatchDate?new Date(payload.dispatchDate+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
+  document.getElementById('successHeading').textContent='Order '+orderNo+' submitted';
+  document.getElementById('successSub').textContent='Logged to Google Sheet · '+ds+' '+ts;
+  var tS=0,tP=0;
+  document.getElementById('r-items').innerHTML=payload.items.map(function(it,i){tS+=parseFloat(it.sets)||0;tP+=parseFloat(it.pcs)||0;return '<tr><td class="sr-col">'+(i+1)+'</td><td>'+(it.name||'—')+'</td><td>'+(it.size||'—')+'</td><td>'+(it.thick||'—')+'</td><td>'+(it.sets||0)+'</td><td>'+(it.pcs||0)+'</td></tr>';}).join('');
+  document.getElementById('r-sets').textContent=tS;
+  document.getElementById('r-pcs').textContent=tP;
+  document.getElementById('formView').style.display='none';
+  document.getElementById('receiptView').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function downloadReceiptImage() {
+  var btn=document.getElementById('downloadImgBtn'),orig=btn.innerHTML;
+  btn.disabled=true; btn.innerHTML='<div class="spinner" style="width:15px;height:15px;margin:0"></div> Generating…';
+  html2canvas(document.getElementById('receiptCard'),{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false}).then(function(canvas){
+    var a=document.createElement('a');
+    a.download='Receipt-'+document.getElementById('r-orderNo').textContent.replace(/\//g,'-')+'.png';
+    a.href=canvas.toDataURL('image/png'); a.click();
+    btn.innerHTML=orig; btn.disabled=false;
+  }).catch(function(e){alert('Could not generate: '+e.message);btn.innerHTML=orig;btn.disabled=false;});
+}
+
+function resetForm() {
+  cbFilledBy.clear(); document.getElementById('salesperson').value = '';
+  ['dispatchDate','partyName','shipTo','note'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('itemsBody').innerHTML='';
+  document.getElementById('mobileItemsContainer').innerHTML='';
+  rows={}; rowId=0; hideErr(); addItem();
+  document.getElementById('receiptView').style.display='none';
+  document.getElementById('formView').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function submitOrder() {
+  hideErr();
+  var requestedBy = cbFilledBy.getValue();
+  var salesperson = document.getElementById('salesperson').value.trim();
+  var dispatchDate= document.getElementById('dispatchDate').value;
+  var partyName   = document.getElementById('partyName').value.trim();
+  var shipTo      = document.getElementById('shipTo').value.trim();
+  var note        = document.getElementById('note').value.trim();
+  var items       = getItems();
+
+  if(!requestedBy) { showErr('Please select or type who is filling the form.'); return; }
+  if(!partyName)   { showErr('Party name is required.'); return; }
+  if(!salesperson) { showErr('Please enter the Attention Person & Contact name.'); return; }
+  if(!shipTo)      { showErr('Ship to address is required.'); return; }
+  if(!dispatchDate){ showErr('Dispatch priority date is required.'); return; }
+  if(!items.length){ showErr('Please add at least one item.'); return; }
+
+  var btn=document.getElementById('submitBtn');
+  btn.disabled=true; btn.innerHTML='<div class="spinner"></div> Submitting…';
+
+  var payload={requestedBy,salesperson,partyName,shipTo,dispatchDate,note,items,submittedAt:new Date().toISOString()};
+  try {
+    var fd=new FormData(); fd.append('data',JSON.stringify(payload));
+    var res=await fetch(SCRIPT_URL,{method:'POST',body:fd});
+    var result=await res.json();
+    if(result.status==='success') showReceipt(result.orderNo,payload);
+    else showErr('Submission failed: '+(result.message||'Unknown error'));
+  } catch(e){ showErr('Submission failed: '+e.message); }
+
+  btn.disabled=false;
+  btn.innerHTML='<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Submit order';
+}
+
+document.getElementById('addItemBtn').addEventListener('click', addItem);
+document.getElementById('submitBtn').addEventListener('click', submitOrder);
+document.getElementById('newOrderBtn').addEventListener('click', resetForm);
+document.getElementById('downloadImgBtn').addEventListener('click', downloadReceiptImage);
+
+addItem();
+</script>
+</body>
+</html>
